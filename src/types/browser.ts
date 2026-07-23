@@ -12,37 +12,28 @@ export interface Tab {
   workspaceId?: string;
 }
 
+export interface Workspace {
+  id: string;
+  name: string;
+  color: string;
+  icon?: string;
+}
+
 export interface Bookmark {
   id: string;
   url: string;
   title: string;
   favicon?: string;
-  addedAt: number;
-}
-
-export interface HistoryItem {
-  id: string;
-  url: string;
-  title: string;
-  visitedAt: number;
-  favicon?: string;
+  timestamp: number;
 }
 
 export interface DownloadItem {
   id: string;
-  filename: string;
   url: string;
-  savedPath: string;
+  filename: string;
+  state: 'progressing' | 'completed' | 'cancelled' | 'interrupted';
   receivedBytes: number;
   totalBytes: number;
-  state: 'progressing' | 'completed' | 'cancelled' | 'interrupted';
   startTime: number;
-}
-
-export interface Workspace {
-  id: string;
-  name: string;
-  color: string;
-  icon: string;
-  isDefault?: boolean;
+  savePath?: string;
 }
