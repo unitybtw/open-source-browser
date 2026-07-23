@@ -237,6 +237,21 @@ ipcMain.handle('set-privacy-shield', (_event, enabled: boolean) => {
   return isPrivacyShieldEnabled;
 });
 
+// Capture thumbnail from a webview via its webContentsId
+ipcMain.handle('capture-tab-thumbnail', async (_event, webContentsId: number) => {
+  try {
+    const { webContents } = require('electron');
+    const wc = webContents.fromId(webContentsId);
+    if (!wc || wc.isDestroyed()) return null;
+    const image = await wc.capturePage();
+    if (image.isEmpty()) return null;
+    // Resize to a compact thumbnail (320x200)
+    return image.resize({ width: 320, height: 200 }).toDataURL();
+  } catch (err) {
+    return null;
+  }
+});
+
 // Download Controls
 ipcMain.handle('pause-download', (_event, id: string) => {
   const item = activeDownloads.get(id);

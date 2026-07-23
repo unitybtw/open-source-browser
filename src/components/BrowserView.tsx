@@ -60,6 +60,18 @@ export const BrowserView: React.FC<BrowserViewProps> = React.memo(({
         canGoForward: webview.canGoForward?.() || false,
         title: webview.getTitle?.() || tab.url
       });
+      // Capture a thumbnail shortly after page load for Tab Peek
+      const electronAPI = (window as any).electronAPI;
+      if (electronAPI?.captureTabThumbnail) {
+        setTimeout(async () => {
+          try {
+            const wcId = webview.getWebContentsId?.();
+            if (!wcId) return;
+            const dataUrl = await electronAPI.captureTabThumbnail(wcId);
+            if (dataUrl) onUpdateTab(tab.id, { thumbnail: dataUrl });
+          } catch (_) {}
+        }, 800);
+      }
     };
 
     const handleFailLoad = (e: any) => {
@@ -164,24 +176,28 @@ export const BrowserView: React.FC<BrowserViewProps> = React.memo(({
     }
   }, [tab.isMuted]);
 
-  // Thumbnail capture loop
+  // Thumbnail capture loop — uses IPC via main process since capturePage is not exposed on renderer-side webview element
   useEffect(() => {
     const webview = webviewRef.current;
-    if (!webview || !isActive || isNewTab) return;
+    const electronAPI = (window as any).electronAPI;
+    if (!webview || !isActive || isNewTab || !electronAPI?.captureTabThumbnail) return;
 
-    const interval = setInterval(async () => {
+    const capture = async () => {
       try {
-        if (webview.capturePage) {
-          const image = await webview.capturePage();
-          if (image && !image.isEmpty()) {
-            onUpdateTab(tab.id, { thumbnail: image.toDataURL() });
-          }
+        const wcId = webview.getWebContentsId?.();
+        if (!wcId) return;
+        const dataUrl = await electronAPI.captureTabThumbnail(wcId);
+        if (dataUrl) {
+          onUpdateTab(tab.id, { thumbnail: dataUrl });
         }
       } catch (err) {
-        // Ignore capture errors
+        // Ignore errors
       }
-    }, 5000); // Every 5 seconds while active
+    };
 
+    // Capture immediately when becoming active, then every 5s
+    capture();
+    const interval = setInterval(capture, 5000);
     return () => clearInterval(interval);
   }, [isActive, isNewTab, tab.id, onUpdateTab]);
 

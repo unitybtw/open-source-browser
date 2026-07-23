@@ -30,6 +30,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onExtensionInstalledSilently: (callback: (event: any, data: any) => void) => {
     ipcRenderer.on('extension-installed-silently', callback);
     return () => ipcRenderer.removeListener('extension-installed-silently', callback);
-  }
+  },
+  // Capture a screenshot of a webview by its webContentsId for Tab Peek
+  captureTabThumbnail: (webContentsId: number) => ipcRenderer.invoke('capture-tab-thumbnail', webContentsId),
 });
 
