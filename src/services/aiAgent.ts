@@ -30,7 +30,7 @@ class AIAgent {
 
   private getThemeColor(): string {
     try {
-      const stored = localStorage.getItem('zen_settings');
+      const stored = localStorage.getItem('nova_settings');
       if (stored) {
         const settings = JSON.parse(stored);
         const color = settings.accentColor;

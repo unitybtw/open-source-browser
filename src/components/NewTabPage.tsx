@@ -29,7 +29,7 @@ export const NewTabPage: React.FC<NewTabPageProps> = React.memo(({
 
   const [speedDials, setSpeedDials] = useState<typeof DEFAULT_SPEED_DIALS>(() => {
     try {
-      const saved = localStorage.getItem('zen_speed_dials');
+      const saved = localStorage.getItem('nova_speed_dials');
       if (saved) return JSON.parse(saved);
     } catch(e) {}
     return DEFAULT_SPEED_DIALS;
@@ -39,7 +39,7 @@ export const NewTabPage: React.FC<NewTabPageProps> = React.memo(({
   const [editingDial, setEditingDial] = useState<{name: string, url: string, index: number | null}>({ name: '', url: '', index: null });
 
   useEffect(() => {
-    localStorage.setItem('zen_speed_dials', JSON.stringify(speedDials));
+    localStorage.setItem('nova_speed_dials', JSON.stringify(speedDials));
   }, [speedDials]);
 
   const handleDeleteDial = (e: React.MouseEvent, index: number) => {

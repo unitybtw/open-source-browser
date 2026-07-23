@@ -132,7 +132,7 @@ function App() {
   });
 
   useEffect(() => {
-    const savedVpn = localStorage.getItem('zen_vpn');
+    const savedVpn = localStorage.getItem('nova_vpn');
     if (savedVpn) {
       try {
         const { enabled, location, customLocations } = JSON.parse(savedVpn);
@@ -147,7 +147,7 @@ function App() {
 
   useEffect(() => {
     const customLocations = vpnLocations.filter(loc => loc.type === 'custom');
-    localStorage.setItem('zen_vpn', JSON.stringify({ enabled: vpnEnabled, location: vpnLocation, customLocations }));
+    localStorage.setItem('nova_vpn', JSON.stringify({ enabled: vpnEnabled, location: vpnLocation, customLocations }));
     
     if (typeof window !== 'undefined' && (window as any).electronAPI?.setVpn) {
       (window as any).electronAPI.setVpn({ 
@@ -189,7 +189,7 @@ function App() {
     const sessionTabs = tabs
       .filter(t => !t.isIncognito);
     const timer = setTimeout(() => {
-      localStorage.setItem('zen_session_tabs', JSON.stringify(sessionTabs));
+      localStorage.setItem('nova_session_tabs', JSON.stringify(sessionTabs));
     }, 100);
 
     return () => clearTimeout(timer);
@@ -302,7 +302,7 @@ function App() {
   const activeTab = tabs.find(t => t.id === activeTabId);
 
   const handleNewTab = useCallback((url?: string | any) => {
-    const finalUrl = typeof url === 'string' ? url : 'zen://newtab';
+    const finalUrl = typeof url === 'string' ? url : 'nova://newtab';
     const newTab: Tab = {
       id: Date.now().toString() + '_' + Math.random().toString(36).substring(2, 7),
       url: finalUrl,
@@ -327,7 +327,7 @@ function App() {
         // Create a new tab if empty workspace
         const newTab: Tab = {
           id: Date.now().toString() + '_' + Math.random().toString(36).substring(2, 7),
-          url: 'zen://newtab',
+          url: 'nova://newtab',
           title: 'New Tab',
           isLoading: false,
           canGoBack: false,
@@ -343,7 +343,7 @@ function App() {
   const handleNewIncognitoTab = useCallback(() => {
     const newTab: Tab = {
       id: Date.now().toString() + '_' + Math.random().toString(36).substring(2, 7),
-      url: 'zen://newtab',
+      url: 'nova://newtab',
       title: 'Private Tab',
       isLoading: false,
       canGoBack: false,
@@ -370,7 +370,7 @@ function App() {
 
 
   const handleNavigate = useCallback((url: string) => {
-    const isNewTabUrl = url === 'zen://newtab' || url === 'about:blank' || url === 'https://newtab';
+    const isNewTabUrl = url === 'nova://newtab' || url === 'about:blank' || url === 'https://newtab';
     setTabs(prev => {
       const activeTab = prev.find(t => t.id === activeTabId);
       if (activeTab && activeTab.url === url) {
@@ -483,7 +483,7 @@ function App() {
         // Add to history if title or url loaded and not blank/newtab AND NOT INCOGNITO
         if (!updated.isIncognito && (updates.title || updates.url)) {
           const targetUrl = updated.url;
-          if (targetUrl && targetUrl !== 'zen://newtab' && targetUrl !== 'about:blank' && !targetUrl.startsWith('chrome://')) {
+          if (targetUrl && targetUrl !== 'nova://newtab' && targetUrl !== 'about:blank' && !targetUrl.startsWith('chrome://')) {
             setHistory(hPrev => {
               // Avoid duplicate entry if same url was recorded recently
               if (hPrev[0]?.url === targetUrl) return hPrev;
@@ -583,7 +583,7 @@ function App() {
         const newId = Date.now().toString() + '_' + Math.random().toString(36).substring(2, 7);
         setTabs(prev => [...prev, {
           id: newId,
-          url: 'zen://newtab',
+          url: 'nova://newtab',
           title: 'New Tab',
           isLoading: false,
           canGoBack: false,
@@ -657,7 +657,7 @@ function App() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `zen_browser_backup_${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `nova_browser_backup_${new Date().toISOString().slice(0, 10)}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

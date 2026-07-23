@@ -26,7 +26,7 @@ export const BrowserView: React.FC<BrowserViewProps> = React.memo(({
   const lastLoadedUrl = useRef<string>('');
 
   const isNewTab = React.useMemo(() => (
-    !tab.url || tab.url === 'about:blank' || tab.url === 'zen://newtab' || tab.url === 'https://newtab'
+    !tab.url || tab.url === 'about:blank' || tab.url === 'nova://newtab' || tab.url === 'https://newtab'
   ), [tab.url]);
 
   // Programmatically navigate the webview when tab.url changes (src prop alone is not reactive)
@@ -167,7 +167,7 @@ export const BrowserView: React.FC<BrowserViewProps> = React.memo(({
       <NewTabPage 
         onNavigate={(url) => {
           // Update the tab URL so BrowserView's useEffect fires loadURL
-          onUpdateTab(tab.id, { url, isLoading: !(url === 'zen://newtab' || url === 'about:blank' || url === 'https://newtab') });
+          onUpdateTab(tab.id, { url, isLoading: !(url === 'nova://newtab' || url === 'about:blank' || url === 'https://newtab') });
           // Also call parent navigate if available
           if (onNavigate) onNavigate(url);
         }} 
