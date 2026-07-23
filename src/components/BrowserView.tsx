@@ -58,6 +58,12 @@ export const BrowserView: React.FC<BrowserViewProps> = React.memo(({
 
     const handleDomReady = () => {
       domReadyRef.current = true;
+      onUpdateTab(tab.id, {
+        isLoading: false,
+        canGoBack: webview.canGoBack?.() || false,
+        canGoForward: webview.canGoForward?.() || false,
+        title: webview.getTitle?.() || tab.url
+      });
     };
 
     const handleStartLoading = () => {
@@ -73,20 +79,24 @@ export const BrowserView: React.FC<BrowserViewProps> = React.memo(({
       });
     };
 
+    const handleFinishLoad = (e: any) => {
+      if (e.isMainFrame || e.isMainFrame === undefined) {
+        onUpdateTab(tab.id, {
+          isLoading: false,
+          canGoBack: webview.canGoBack?.() || false,
+          canGoForward: webview.canGoForward?.() || false,
+          title: webview.getTitle?.() || tab.url
+        });
+      }
+    };
+
     const handleFailLoad = (e: any) => {
       if (!e.isMainFrame) return; // Ignore subframe/resource failures (like Youtube ads or trackers)
-      // errorCode -3 is ERR_ABORTED (usually fine, user navigated away before load finished)
-      if (e.errorCode !== -3) {
-        onUpdateTab(tab.id, { isLoading: false, title: 'Error: Cannot Load Page' });
-      } else {
-        onUpdateTab(tab.id, { isLoading: false });
-      }
+      onUpdateTab(tab.id, { isLoading: false });
     };
 
     const handleNavigateEvent = (e: any) => {
       if (e.isMainFrame && e.url) {
-        // Keep lastLoadedUrl in sync so that redirect-caused tab.url updates
-        // don't re-trigger the URL useEffect and cause an infinite reload loop
         lastLoadedUrl.current = e.url;
         onUpdateTab(tab.id, {
           url: e.url,
@@ -134,7 +144,6 @@ export const BrowserView: React.FC<BrowserViewProps> = React.memo(({
     const handleCrashed = () => {
       onUpdateTab(tab.id, { isLoading: false, title: 'Page Crashed' });
       if (webviewRef.current) {
-        // Try to recover the webview by reloading it
         webviewRef.current.reload();
       }
     };
@@ -148,6 +157,7 @@ export const BrowserView: React.FC<BrowserViewProps> = React.memo(({
     webview.addEventListener('dom-ready', handleDomReady);
     webview.addEventListener('did-start-loading', handleStartLoading);
     webview.addEventListener('did-stop-loading', handleStopLoading);
+    webview.addEventListener('did-finish-load', handleFinishLoad);
     webview.addEventListener('did-fail-load', handleFailLoad);
     webview.addEventListener('did-navigate', handleNavigateEvent);
     webview.addEventListener('did-navigate-in-page', handleNavigateInPage);
@@ -157,10 +167,18 @@ export const BrowserView: React.FC<BrowserViewProps> = React.memo(({
     webview.addEventListener('crashed', handleCrashed);
     webview.addEventListener('found-in-page', handleFoundInPage);
 
+    // Initial check: if webview is already not loading, ensure isLoading is false
+    setTimeout(() => {
+      if (webview && webview.isLoading && !webview.isLoading()) {
+        onUpdateTab(tab.id, { isLoading: false });
+      }
+    }, 500);
+
     return () => {
       webview.removeEventListener('dom-ready', handleDomReady);
       webview.removeEventListener('did-start-loading', handleStartLoading);
       webview.removeEventListener('did-stop-loading', handleStopLoading);
+      webview.removeEventListener('did-finish-load', handleFinishLoad);
       webview.removeEventListener('did-fail-load', handleFailLoad);
       webview.removeEventListener('did-navigate', handleNavigateEvent);
       webview.removeEventListener('did-navigate-in-page', handleNavigateInPage);
