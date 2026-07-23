@@ -88,7 +88,8 @@ function App() {
   const [isFindInPageOpen, setIsFindInPageOpen] = useState(false);
   const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
   const [isVpnPopoverOpen, setIsVpnPopoverOpen] = useState(false);
-  const [isSplitView, setIsSplitView] = useState(false);
+  const [splitTabId, setSplitTabId] = useState<string | null>(null);
+  const [splitRatio, setSplitRatio] = useState(50);
   const [isExtensionsOpen, setIsExtensionsOpen] = useState(false);
   const [findMatches, setFindMatches] = useState<{ index: number; count: number }>({ index: 0, count: 0 });
 
@@ -235,9 +236,12 @@ function App() {
       if (activeTabId === id) {
         setActiveTabId(newTabs[newTabs.length - 1].id);
       }
+      if (splitTabId === id) {
+        setSplitTabId(null);
+      }
       return newTabs;
     });
-  }, [activeTabId]);
+  }, [activeTabId, splitTabId]);
 
 
 
@@ -565,7 +569,31 @@ function App() {
     }
   }, [activeTabId]);
   const handleOpenFindInPage = useCallback(() => setIsFindInPageOpen(prev => !prev), []);
-  const handleToggleSplitView = useCallback(() => setIsSplitView(prev => !prev), []);
+  
+  const handleToggleSplitView = useCallback(() => {
+    if (splitTabId) {
+      setSplitTabId(null);
+    } else {
+      const workspaceTabs = tabs.filter(t => t.workspaceId === activeWorkspaceId || (!t.workspaceId && activeWorkspaceId === 'default'));
+      const otherTab = workspaceTabs.find(t => t.id !== activeTabId);
+      if (otherTab) {
+        setSplitTabId(otherTab.id);
+      } else {
+        const newId = Date.now().toString() + '_' + Math.random().toString(36).substring(2, 7);
+        setTabs(prev => [...prev, {
+          id: newId,
+          url: 'zen://newtab',
+          title: 'New Tab',
+          isLoading: false,
+          canGoBack: false,
+          canGoForward: false,
+          workspaceId: activeWorkspaceId
+        }]);
+        setSplitTabId(newId);
+      }
+      setSplitRatio(50);
+    }
+  }, [splitTabId, tabs, activeWorkspaceId, activeTabId]);
 
   const handleGoBack = useCallback(() => {
     const webview = document.querySelector(`webview[data-tab-id="${activeTabId}"]`) as any;
@@ -803,9 +831,11 @@ function App() {
   const activeDownloadsCount = downloads.filter(d => d.state === 'progressing').length;
 
   // Compute second tab for split view (if available)
-  const secondaryTab = tabs.length > 1 
-    ? tabs.find(t => t.id !== activeTabId && (t.workspaceId === activeWorkspaceId || (!t.workspaceId && activeWorkspaceId === 'default'))) 
-    : undefined;
+  const secondaryTab = splitTabId ? tabs.find(t => t.id === splitTabId) : undefined;
+  // If active tab is the same as split tab, reset split view or switch split tab
+  if (secondaryTab && activeTabId === secondaryTab.id) {
+    setSplitTabId(null);
+  }
 
   const workspaceTabs = tabs.filter(t => t.workspaceId === activeWorkspaceId || (!t.workspaceId && activeWorkspaceId === 'default'));
 
@@ -842,7 +872,7 @@ function App() {
           showBookmarksBar={settings.showBookmarksBar}
           useVerticalTabs={settings.useVerticalTabs}
           onToggleReaderMode={() => setIsReaderModeOpen(prev => !prev)}
-          isSplitView={isSplitView}
+          isSplitView={!!splitTabId}
           isIncognito={activeTab?.isIncognito}
           searchEngine={settings.searchEngine}
           onToggleBookmark={handleToggleBookmarkActive}
@@ -890,9 +920,9 @@ function App() {
         />
 
         {/* Primary View */}
-        <div className={`h-full relative transition-all duration-300 ${isSplitView && secondaryTab ? 'w-1/2 border-r border-slate-200' : 'w-full'}`}>
+        <div style={{ width: secondaryTab ? `${splitRatio}%` : '100%' }} className="h-full relative transition-all duration-150">
           {tabs.map((tab) => {
-            if (isSplitView && secondaryTab && tab.id === secondaryTab.id) {
+            if (secondaryTab && tab.id === secondaryTab.id) {
               return null;
             }
             return (
@@ -915,11 +945,48 @@ function App() {
           })}
         </div>
 
+        {/* Resizer Handle */}
+        {secondaryTab && (
+          <div 
+            className="w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-600 bg-slate-200 dark:bg-slate-700 z-30 transition-colors flex items-center justify-center"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              const startX = e.pageX;
+              const startRatio = splitRatio;
+              
+              const handleMouseMove = (moveEvent: MouseEvent) => {
+                const deltaX = moveEvent.pageX - startX;
+                const containerWidth = document.body.clientWidth;
+                let newRatio = startRatio + (deltaX / containerWidth) * 100;
+                newRatio = Math.max(20, Math.min(80, newRatio)); // Limit to 20%-80%
+                setSplitRatio(newRatio);
+              };
+              
+              const handleMouseUp = () => {
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('mouseup', handleMouseUp);
+              };
+              
+              document.addEventListener('mousemove', handleMouseMove);
+              document.addEventListener('mouseup', handleMouseUp);
+            }}
+          />
+        )}
+
         {/* Secondary View (Split Screen) */}
-        {isSplitView && secondaryTab && (
-          <div className="w-1/2 h-full relative bg-white dark:bg-slate-900">
-            <div className="absolute top-2 right-2 z-20 px-2 py-1 bg-slate-800/80 text-white rounded text-[10px] font-medium backdrop-blur-xs">
-              Split View: {secondaryTab.title || secondaryTab.url}
+        {secondaryTab && (
+          <div style={{ width: `${100 - splitRatio}%` }} className="h-full relative bg-white dark:bg-slate-900 transition-all duration-150">
+            <div className="absolute top-2 right-2 z-20 flex items-center gap-2">
+              <div className="px-2 py-1 bg-slate-800/80 text-white rounded text-[10px] font-medium backdrop-blur-xs shadow-md">
+                Split View: {secondaryTab.title || secondaryTab.url}
+              </div>
+              <button 
+                onClick={() => setSplitTabId(null)}
+                className="p-1 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-md transition-colors"
+                title="Close Split View"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
             </div>
             <BrowserView 
               tab={secondaryTab}
