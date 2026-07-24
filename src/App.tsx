@@ -357,14 +357,32 @@ function App() {
   const handleZoomIn = useCallback(() => {
     const webview = document.querySelector(`webview[data-tab-id="${activeTabId}"]`) as any;
     if (webview && webview.getZoomLevel) {
-      webview.getZoomLevel((level: number) => webview.setZoomLevel(level + 0.5));
+      try {
+        const result = webview.getZoomLevel();
+        if (typeof result === 'number') {
+          webview.setZoomLevel(result + 0.5);
+        } else if (result && typeof result.then === 'function') {
+          result.then((level: number) => webview.setZoomLevel(level + 0.5));
+        }
+      } catch (e) {
+        console.error("Zoom in error:", e);
+      }
     }
   }, [activeTabId]);
 
   const handleZoomOut = useCallback(() => {
     const webview = document.querySelector(`webview[data-tab-id="${activeTabId}"]`) as any;
     if (webview && webview.getZoomLevel) {
-      webview.getZoomLevel((level: number) => webview.setZoomLevel(level - 0.5));
+      try {
+        const result = webview.getZoomLevel();
+        if (typeof result === 'number') {
+          webview.setZoomLevel(result - 0.5);
+        } else if (result && typeof result.then === 'function') {
+          result.then((level: number) => webview.setZoomLevel(level - 0.5));
+        }
+      } catch (e) {
+        console.error("Zoom out error:", e);
+      }
     }
   }, [activeTabId]);
 
