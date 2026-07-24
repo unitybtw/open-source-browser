@@ -44,6 +44,7 @@ interface TopBarProps {
   isSplitView: boolean;
   isIncognito?: boolean;
   useVerticalTabs?: boolean;
+  tabStyle?: 'rounded' | 'square' | 'floating';
   searchEngine?: 'google' | 'duckduckgo' | 'bing' | 'brave' | 'ecosia';
   onToggleBookmark: () => void;
   onOpenHistory: () => void;
@@ -87,6 +88,7 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
   isSplitView,
   isIncognito = false,
   useVerticalTabs = false,
+  tabStyle = 'floating',
   searchEngine = 'google',
   onToggleBookmark,
   onOpenHistory,
@@ -240,7 +242,11 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                 key={tab.id}
                 onClick={() => onSelectTab(tab.id)}
-                className={`group flex items-center justify-between px-3 py-1.5 flex-1 min-w-[120px] max-w-[240px] rounded-t-xl text-[13px] cursor-pointer transition-colors border-t border-x no-drag ${
+                className={`group flex items-center justify-between px-3 py-1.5 flex-1 min-w-[120px] max-w-[240px] text-[13px] cursor-pointer transition-colors no-drag ${
+                  tabStyle === 'floating' ? 'rounded-lg mx-0.5 my-1 border' : 
+                  tabStyle === 'square' ? 'rounded-none border-t border-x' : 
+                  'rounded-t-xl border-t border-x'
+                } ${
                   isActive
                     ? isIncognito
                       ? 'bg-slate-800 text-slate-100 border-slate-700 font-semibold shadow-xs border-t-2 border-t-blue-500 relative z-10'

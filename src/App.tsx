@@ -225,6 +225,35 @@ function App() {
     localStorage.setItem('active_tab_session', activeTabId);
   }, [activeTabId]);
 
+  // Apply Theme Mode
+  useEffect(() => {
+    const root = document.documentElement;
+    const applyTheme = () => {
+      if (settings.theme === 'dark') {
+        root.classList.add('dark');
+      } else if (settings.theme === 'light') {
+        root.classList.remove('dark');
+      } else {
+        // System default
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          root.classList.add('dark');
+        } else {
+          root.classList.remove('dark');
+        }
+      }
+    };
+    
+    applyTheme();
+
+    // Listen for system theme changes if using system
+    if (settings.theme === 'system' || !settings.theme) {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const listener = () => applyTheme();
+      mediaQuery.addEventListener('change', listener);
+      return () => mediaQuery.removeEventListener('change', listener);
+    }
+  }, [settings.theme]);
+
   // Apply User Accent Color to CSS Root Variable
   useEffect(() => {
     const colorMap: Record<string, string> = {
@@ -236,6 +265,10 @@ function App() {
     };
     const accentHex = colorMap[settings.accentColor] || '#3b82f6';
     document.documentElement.style.setProperty('--accent-color', accentHex);
+    // In Tailwind v4, we can override the default blue color to match the accent
+    document.documentElement.style.setProperty('--color-blue-500', accentHex);
+    document.documentElement.style.setProperty('--color-blue-600', accentHex);
+    document.documentElement.style.setProperty('--color-blue-400', accentHex);
   }, [settings.accentColor]);
   
   const [bookmarks, setBookmarks] = useState<Bookmark[]>(() => {
@@ -1040,6 +1073,7 @@ function App() {
           useVerticalTabs={settings.useVerticalTabs}
           onToggleReaderMode={() => setIsReaderModeOpen(prev => !prev)}
           isSplitView={!!splitTabId}
+          tabStyle={settings.tabStyle}
           isIncognito={activeTab?.isIncognito}
           searchEngine={settings.searchEngine}
           onToggleBookmark={handleToggleBookmarkActive}
