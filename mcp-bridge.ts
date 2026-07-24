@@ -1,0 +1,66 @@
+#!/usr/bin/env node
+
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
+import * as EventSourceLib from 'eventsource';
+
+// Required for SSEClientTransport in Node.js
+(global as any).EventSource = EventSourceLib.default || EventSourceLib;
+
+async function main() {
+  const sseTransport = new SSEClientTransport(new URL('http://localhost:3020/mcp'));
+  const client = new Client({ name: 'mcp-bridge', version: '1.0.0' }, { capabilities: {} });
+  
+  try {
+    await client.connect(sseTransport);
+    console.error('[MCP Bridge] Connected to Nova Browser SSE server');
+  } catch (error: any) {
+    console.error('[MCP Bridge] Error connecting to Nova Browser:', error.message);
+    console.error('Make sure Nova Browser is running.');
+    process.exit(1);
+  }
+
+  const server = new Server({
+    name: 'nova-browser-mcp',
+    version: '1.0.0',
+  }, {
+    capabilities: {
+      tools: {}
+    }
+  });
+
+  server.setRequestHandler(ListToolsRequestSchema, async () => {
+    try {
+      const response = await client.request({ method: 'tools/list' }, ListToolsRequestSchema);
+      return response as any;
+    } catch (e) {
+      console.error('[MCP Bridge] Error listing tools:', e);
+      return { tools: [] };
+    }
+  });
+
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    try {
+      const response = await client.request(
+        { method: 'tools/call', params: request.params }, 
+        CallToolRequestSchema
+      );
+      return response as any;
+    } catch (e: any) {
+      console.error(`[MCP Bridge] Error calling tool ${request.params.name}:`, e);
+      return { content: [{ type: 'text', text: `Bridge Error: ${e.message}` }], isError: true };
+    }
+  });
+
+  const stdioTransport = new StdioServerTransport();
+  await server.connect(stdioTransport);
+  console.error('[MCP Bridge] Stdio server running and proxying requests.');
+}
+
+main().catch((error) => {
+  console.error('[MCP Bridge] Fatal error:', error);
+  process.exit(1);
+});
