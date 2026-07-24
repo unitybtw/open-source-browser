@@ -58,6 +58,7 @@ export const BrowserView: React.FC<BrowserViewProps> = React.memo(({
     if (!webview) return;
 
     const handleDomReady = () => {
+      console.log('[BrowserView] dom-ready');
       domReadyRef.current = true;
       onUpdateTab(tab.id, {
         isLoading: false,
@@ -68,12 +69,14 @@ export const BrowserView: React.FC<BrowserViewProps> = React.memo(({
     };
 
     const handleStartNavigation = (e: any) => {
+      console.log('[BrowserView] did-start-navigation', e.isMainFrame, e.url);
       if (e.isMainFrame) {
         onUpdateTab(tab.id, { isLoading: true });
       }
     };
 
     const handleFinishLoad = (e: any) => {
+      console.log('[BrowserView] did-finish-load', e.isMainFrame);
       if (e.isMainFrame || e.isMainFrame === undefined) {
         onUpdateTab(tab.id, {
           isLoading: false,
@@ -85,6 +88,7 @@ export const BrowserView: React.FC<BrowserViewProps> = React.memo(({
     };
 
     const handleStopLoading = () => {
+      console.log('[BrowserView] did-stop-loading');
       // Fallback for when all frames finish loading
       onUpdateTab(tab.id, {
         isLoading: false,
@@ -95,11 +99,13 @@ export const BrowserView: React.FC<BrowserViewProps> = React.memo(({
     };
 
     const handleFailLoad = (e: any) => {
+      console.log('[BrowserView] did-fail-load', e.isMainFrame, e.errorCode, e.errorDescription);
       if (!e.isMainFrame) return; // Ignore subframe/resource failures (like Youtube ads or trackers)
       onUpdateTab(tab.id, { isLoading: false });
     };
 
     const handleNavigateEvent = (e: any) => {
+      console.log('[BrowserView] did-navigate', e.isMainFrame, e.url);
       if (e.isMainFrame && e.url) {
         lastLoadedUrl.current = e.url;
         onUpdateTab(tab.id, {
@@ -173,12 +179,30 @@ export const BrowserView: React.FC<BrowserViewProps> = React.memo(({
 
     // Initial check: if webview is already not loading, ensure isLoading is false
     setTimeout(() => {
-      if (webview && webview.isLoading && !webview.isLoading()) {
-        onUpdateTab(tab.id, { isLoading: false });
-      }
+      try {
+        if (webview && typeof webview.isLoading === 'function' && !webview.isLoading()) {
+          onUpdateTab(tab.id, { isLoading: false });
+        }
+      } catch (err) {}
     }, 500);
 
+    // Failsafe: Continuously sync actual webview loading state to fix any stuck spinners
+    const syncInterval = setInterval(() => {
+      try {
+        if (webview && typeof webview.isLoading === 'function') {
+          const actualLoading = webview.isLoading();
+          // If webview says it's not loading, but our state says it is, forcefully clear it
+          // We can't access tab.isLoading directly here because it's stale, but we can call onUpdateTab
+          // We just send isLoading: false. App.tsx will ignore it if it's already false.
+          if (!actualLoading) {
+             onUpdateTab(tab.id, { isLoading: false });
+          }
+        }
+      } catch (err) {}
+    }, 2000);
+
     return () => {
+      clearInterval(syncInterval);
       webview.removeEventListener('dom-ready', handleDomReady);
       webview.removeEventListener('did-start-navigation', handleStartNavigation);
       webview.removeEventListener('did-stop-loading', handleStopLoading);

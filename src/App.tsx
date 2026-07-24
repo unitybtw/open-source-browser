@@ -473,6 +473,10 @@ function App() {
   const handleUpdateTab = useCallback((id: string, updates: Partial<Tab>) => {
     setTabs(prev => prev.map(t => {
       if (t.id === id) {
+        // Only apply updates if there are actual changes
+        const hasChanges = Object.entries(updates).some(([k, v]) => (t as any)[k] !== v);
+        if (!hasChanges) return t;
+
         const updated = { ...t, ...updates };
         
         // Add to history if title or url loaded and not blank/newtab AND NOT INCOGNITO
