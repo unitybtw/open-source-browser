@@ -631,6 +631,24 @@ function App() {
     setTabs(prev => prev.map(t => t.id === id ? { ...t, isMuted: !t.isMuted } : t));
   }, []);
 
+  const handleTogglePip = useCallback((tabId: string) => {
+    const webview = document.querySelector(`webview[data-tab-id="${tabId}"]`) as any;
+    if (webview && webview.executeJavaScript) {
+      webview.executeJavaScript(`
+        (() => {
+          const video = document.querySelector('video');
+          if (video) {
+            if (document.pictureInPictureElement) {
+              document.exitPictureInPicture();
+            } else {
+              video.requestPictureInPicture().catch(err => console.error(err));
+            }
+          }
+        })();
+      `);
+    }
+  }, []);
+
   const handleDuplicateTab = useCallback((id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setTabs(prev => {

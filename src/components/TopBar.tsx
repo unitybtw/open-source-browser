@@ -57,6 +57,7 @@ interface TopBarProps {
   onDuplicateTab: (id: string, e: React.MouseEvent) => void;
   onTogglePinTab: (id: string, e: React.MouseEvent) => void;
   onToggleMuteTab: (id: string, e: React.MouseEvent) => void;
+  onTogglePip?: (id: string) => void;
   onSelectTab: (id: string) => void;
   onNewTab: (url?: string) => void;
   onNewIncognitoTab: () => void;
@@ -99,6 +100,7 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
   onDuplicateTab,
   onTogglePinTab,
   onToggleMuteTab,
+  onTogglePip,
   onSelectTab,
   onNewTab,
   onNewIncognitoTab,
@@ -264,13 +266,24 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
                       <VolumeX className="w-3.5 h-3.5 text-red-500" />
                     </button>
                   ) : tab.isPlayingAudio ? (
-                    <button
-                      onClick={(e) => onToggleMuteTab(tab.id, e)}
-                      className="p-0.5 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-700 dark:hover:bg-slate-700 transition-all shrink-0"
-                      title="Mute Tab"
-                    >
-                      <Volume2 className="w-3.5 h-3.5 text-blue-500 animate-pulse" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      {onTogglePip && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onTogglePip(tab.id); }}
+                          className="p-0.5 rounded-full hover:bg-slate-200 text-slate-400 hover:text-blue-500 dark:hover:bg-slate-700 transition-all shrink-0"
+                          title="Picture in Picture"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-picture-in-picture-2"><path d="M21 9V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10c0 1.1.9 2 2 2h4"/><rect width="10" height="7" x="12" y="13" rx="2"/></svg>
+                        </button>
+                      )}
+                      <button
+                        onClick={(e) => onToggleMuteTab(tab.id, e)}
+                        className="p-0.5 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-700 dark:hover:bg-slate-700 transition-all shrink-0"
+                        title="Mute Tab"
+                      >
+                        <Volume2 className="w-3.5 h-3.5 text-blue-500 animate-pulse" />
+                      </button>
+                    </div>
                   ) : null}
 
                   {tabs.length > 1 && (
