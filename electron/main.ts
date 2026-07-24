@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, session, globalShortcut, dialog, webContents } from 'electron';
+import { app, BrowserWindow, ipcMain, session, globalShortcut, dialog, webContents, shell } from 'electron';
 import path from 'path';
 import fetch from 'cross-fetch';
 import fs from 'fs';
@@ -142,7 +142,8 @@ session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
         filename,
         receivedBytes: item.getReceivedBytes(),
         totalBytes,
-        state: state === 'completed' ? 'completed' : 'cancelled'
+        state: state === 'completed' ? 'completed' : 'cancelled',
+        savePath: item.getSavePath()
       });
     });
   });
@@ -309,23 +310,6 @@ ipcMain.handle('pause-download', (_event, id: string) => {
   return false;
 });
 
-// MCP Server Controls
-ipcMain.handle('start-mcp-server', async () => {
-  if (mcpServer) {
-    await mcpServer.start();
-    return true;
-  }
-  return false;
-});
-
-ipcMain.handle('stop-mcp-server', () => {
-  if (mcpServer) {
-    mcpServer.stop();
-    return true;
-  }
-  return false;
-});
-
 ipcMain.handle('resume-download', (_event, id: string) => {
   const item = activeDownloads.get(id);
   if (item && item.canResume()) {
@@ -340,6 +324,35 @@ ipcMain.handle('cancel-download', (_event, id: string) => {
   if (item) {
     item.cancel();
     activeDownloads.delete(id);
+    return true;
+  }
+  return false;
+});
+
+ipcMain.handle('open-download', (_event, pathStr: string) => {
+  if (pathStr && fs.existsSync(pathStr)) {
+    shell.openPath(pathStr);
+  }
+});
+
+ipcMain.handle('show-download-in-folder', (_event, pathStr: string) => {
+  if (pathStr && fs.existsSync(pathStr)) {
+    shell.showItemInFolder(pathStr);
+  }
+});
+
+// MCP Server Controls
+ipcMain.handle('start-mcp-server', async () => {
+  if (mcpServer) {
+    await mcpServer.start();
+    return true;
+  }
+  return false;
+});
+
+ipcMain.handle('stop-mcp-server', () => {
+  if (mcpServer) {
+    mcpServer.stop();
     return true;
   }
   return false;

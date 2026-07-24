@@ -11,6 +11,7 @@ export interface DownloadItem {
   totalBytes: number;
   state: 'progressing' | 'completed' | 'cancelled' | 'interrupted';
   isPaused?: boolean;
+  savePath?: string;
 }
 
 interface DownloadsModalProps {
@@ -184,6 +185,22 @@ export const DownloadsModal: React.FC<DownloadsModalProps> = React.memo(({
                               title="Cancel"
                             >
                               <XCircle className="w-3.5 h-3.5 text-red-500" />
+                            </button>
+                          </div>
+                        )}
+                        {item.state === 'completed' && item.savePath && (
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => (window as any).electronAPI?.showDownloadInFolder?.(item.savePath!)}
+                              className="text-[11px] font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+                            >
+                              Show in folder
+                            </button>
+                            <button
+                              onClick={() => (window as any).electronAPI?.openDownload?.(item.savePath!)}
+                              className="text-[11px] font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 transition-colors"
+                            >
+                              Open file
                             </button>
                           </div>
                         )}
