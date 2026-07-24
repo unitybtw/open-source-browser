@@ -1030,6 +1030,7 @@ function App() {
           onDuplicateTab={handleDuplicateTab}
           onTogglePinTab={handleTogglePinTab}
           onToggleMuteTab={handleToggleMuteTab}
+          onTogglePip={handleTogglePip}
           onSelectTab={setActiveTabId}
           onNewTab={handleNewTab}
           onNewIncognitoTab={handleNewIncognitoTab}
