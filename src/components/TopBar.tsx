@@ -495,7 +495,10 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
 
             {/* Search Suggestions Dropdown */}
             {showSuggestions && searchValue.trim().length > 0 && (
-              <div className={`absolute left-0 right-0 top-full mt-2 rounded-2xl shadow-2xl py-2 z-50 overflow-hidden divide-y ${isIncognito ? 'bg-slate-800 border border-slate-700 divide-slate-700' : 'bg-white border border-slate-200/80 divide-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:divide-slate-700'}`}>
+              <div 
+                className={`absolute left-0 right-0 top-full mt-2 rounded-2xl shadow-2xl py-2 z-50 overflow-hidden divide-y ${isIncognito ? 'bg-slate-800 border border-slate-700 divide-slate-700' : 'bg-white border border-slate-200/80 divide-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:divide-slate-700'}`}
+                onMouseDown={(e) => e.preventDefault()}
+              >
               
               {/* Primary Direct Action */}
                 <button
@@ -503,6 +506,7 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
                   onClick={() => {
                     setShowSuggestions(false);
                     onNavigate(formatSearchUrl(searchValue, searchEngine));
+                    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors group ${isIncognito ? 'hover:bg-slate-700 text-slate-200' : 'hover:bg-blue-50/70 text-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'}`}
                 >
@@ -529,6 +533,7 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
                         setSearchValue(suggestions[0]);
                         setShowSuggestions(false);
                         onNavigate(formatSearchUrl(suggestions[0], searchEngine));
+                        if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
                       }}
                       className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-amber-50/80 text-slate-800 text-sm text-left transition-colors group bg-amber-50/30"
                     >
@@ -556,6 +561,7 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
                           setSearchValue(suggestion);
                           setShowSuggestions(false);
                           onNavigate(formatSearchUrl(suggestion, searchEngine));
+                          if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
                         }}
                         className="w-full flex items-center gap-3 px-4 py-2 hover:bg-slate-50 text-slate-700 text-sm text-left transition-colors"
                       >
@@ -580,8 +586,10 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
                         key={bookmark.id}
                         type="button"
                         onClick={() => {
+                          setSearchValue(bookmark.url);
                           setShowSuggestions(false);
                           onNavigate(bookmark.url);
+                          if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
                         }}
                         className="w-full flex items-center justify-between px-4 py-2 hover:bg-slate-50 text-slate-700 text-sm text-left transition-colors"
                       >
