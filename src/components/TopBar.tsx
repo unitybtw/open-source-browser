@@ -148,8 +148,16 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
     return () => window.removeEventListener('extensions-updated', handleExtUpdated);
   }, []);
 
+  const [isFocused, setIsFocused] = useState(false);
+
   useEffect(() => {
-    if (!searchValue || searchValue.includes('://') || searchValue.includes('.') || activeTab?.url === searchValue) {
+    if (!isFocused) {
+      setSearchValue(activeTab?.url || '');
+    }
+  }, [activeTab?.url, isFocused]);
+
+  useEffect(() => {
+    if (!searchValue || searchValue.includes('://') || searchValue.includes('.')) {
       setSuggestions([]);
       return;
     }
@@ -177,7 +185,7 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
 
     const timer = setTimeout(fetchSuggestions, 150);
     return () => clearTimeout(timer);
-  }, [searchValue, activeTab?.url]);
+  }, [searchValue]);
 
   const handleSearchSubmit = React.useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -185,8 +193,12 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
 
     const url = formatSearchUrl(searchValue, searchEngine);
     onNavigate(url);
-    setSearchValue('');
     setShowSuggestions(false);
+    
+    // Blur the active element to drop focus
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
   }, [searchValue, searchEngine, onNavigate]);
 
   const [isWorkspaceDropdownOpen, setIsWorkspaceDropdownOpen] = useState(false);
@@ -399,13 +411,17 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
               </div>
               <input
                 type="text"
-                value={searchValue || activeTab?.url || ''}
+                value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
-                onFocus={() => {
-                  setSearchValue(activeTab?.url || '');
+                onFocus={(e) => {
+                  setIsFocused(true);
                   setShowSuggestions(true);
+                  e.target.select();
                 }}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                onBlur={() => {
+                  setIsFocused(false);
+                  setTimeout(() => setShowSuggestions(false), 200);
+                }}
                 placeholder={`Search ${getSearchEngineName(searchEngine)} or type a URL`}
                 className={`w-full border border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100/50 rounded-full py-1.5 pl-9 pr-24 text-[13px] outline-none transition-all shadow-2xs ${
                   isIncognito 
