@@ -636,13 +636,16 @@ function App() {
     if (webview && webview.executeJavaScript) {
       webview.executeJavaScript(`
         (() => {
-          const video = document.querySelector('video');
-          if (video) {
-            if (document.pictureInPictureElement) {
-              document.exitPictureInPicture();
-            } else {
-              video.requestPictureInPicture().catch(err => console.error(err));
-            }
+          const videos = Array.from(document.querySelectorAll('video'));
+          const target = videos.find(v => !v.paused) || videos[0];
+          if (!target) {
+            alert("No video found on page!");
+            return;
+          }
+          if (document.pictureInPictureElement) {
+            document.exitPictureInPicture().catch(e => alert("Exit PiP error: " + e));
+          } else {
+            target.requestPictureInPicture().catch(e => alert("PiP error: " + e.message));
           }
         })();
       `, true);
