@@ -8,6 +8,7 @@ interface NewTabPageProps {
   onNavigate: (url: string) => void;
   searchEngine?: UserSettings['searchEngine'];
   privacyShield?: boolean;
+  newTabBackground?: string;
 }
 
 const DEFAULT_SPEED_DIALS = [
@@ -21,7 +22,8 @@ const DEFAULT_SPEED_DIALS = [
 export const NewTabPage: React.FC<NewTabPageProps> = React.memo(({ 
   onNavigate, 
   searchEngine = 'google',
-  privacyShield = true
+  privacyShield = true,
+  newTabBackground = 'default'
 }) => {
   const [searchValue, setSearchValue] = useState('');
   const [timeStr, setTimeStr] = useState('');
@@ -120,13 +122,25 @@ export const NewTabPage: React.FC<NewTabPageProps> = React.memo(({
     visible: { opacity: 1, y: 0, transition: { type: 'spring' as any, damping: 20, stiffness: 300 } }
   };
 
+  const bgClass = {
+    'default': 'bg-slate-50 dark:bg-slate-900',
+    'gradient': 'bg-gradient-to-br from-blue-500 via-purple-500 to-rose-500',
+    'mesh': 'bg-gradient-to-tr from-emerald-400 via-cyan-500 to-blue-500',
+    'glass': 'bg-slate-900 bg-[url("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop")] bg-cover bg-center'
+  }[newTabBackground || 'default'] || 'bg-slate-50 dark:bg-slate-900';
+
+  const isDarkBg = newTabBackground !== 'default';
+
   return (
     <motion.div 
       initial="hidden"
       animate="visible"
       variants={containerVariants}
-      className="w-full h-full flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 px-6 py-12 overflow-hidden"
+      className={`w-full h-full flex flex-col items-center justify-center px-6 py-12 overflow-hidden relative ${bgClass} ${isDarkBg ? 'text-white' : 'text-slate-800 dark:text-slate-100'}`}
     >
+      {isDarkBg && <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-0" />}
+      
+      <div className="relative z-10 w-full flex flex-col items-center justify-center">
       
       {/* Privacy Shield Badge */}
       <motion.div variants={itemVariants} className={`flex items-center gap-2 px-4 py-1.5 rounded-full border text-xs font-medium mb-6 shadow-2xs transition-all ${
@@ -215,6 +229,7 @@ export const NewTabPage: React.FC<NewTabPageProps> = React.memo(({
           </button>
         </div>
       </motion.div>
+      </div>
 
       {/* Edit/Add Modal */}
       <AnimatePresence>

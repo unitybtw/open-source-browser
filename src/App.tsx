@@ -1081,6 +1081,7 @@ function App() {
                   onFoundInPage={handleFoundInPage}
                   searchEngine={settings.searchEngine}
                   privacyShield={settings.privacyShield}
+                  newTabBackground={settings.newTabBackground}
                   isActive={tab.id === activeTabId || tab.id === splitTabId}
                 />
               </div>

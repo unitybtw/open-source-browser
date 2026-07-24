@@ -12,6 +12,7 @@ export interface BrowserViewProps {
   onFoundInPage?: (index: number, count: number) => void;
   searchEngine?: 'google' | 'duckduckgo' | 'bing' | 'brave' | 'ecosia';
   privacyShield?: boolean;
+  newTabBackground?: string;
   isActive?: boolean;
 }
 
@@ -23,6 +24,7 @@ export const BrowserView: React.FC<BrowserViewProps> = React.memo(({
   onFoundInPage,
   searchEngine = 'google',
   privacyShield = true,
+  newTabBackground = 'default',
   isActive = false
 }) => {
   const webviewRef = useRef<any>(null);
@@ -271,6 +273,7 @@ export const BrowserView: React.FC<BrowserViewProps> = React.memo(({
         }} 
         searchEngine={searchEngine}
         privacyShield={privacyShield}
+        newTabBackground={newTabBackground}
       />
     );
   }

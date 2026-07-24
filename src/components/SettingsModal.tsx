@@ -12,6 +12,7 @@ export interface UserSettings {
   showBookmarksBar: boolean;
   useVerticalTabs: boolean;
   mcpServerEnabled: boolean;
+  newTabBackground: 'default' | 'gradient' | 'mesh' | 'glass';
 }
 
 interface SettingsModalProps {
@@ -152,6 +153,32 @@ export const SettingsModal: React.FC<SettingsModalProps> = React.memo(({
                 >
                   <div className={`w-3 h-3 rounded-full ${c.color}`} />
                   <span>{c.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* New Tab Background */}
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-700 space-y-3">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">New Tab Background</label>
+            <div className="flex flex-wrap gap-3">
+              {[
+                { id: 'default', name: 'Clean (Default)', style: 'bg-slate-50 dark:bg-slate-900' },
+                { id: 'gradient', name: 'Vibrant Gradient', style: 'bg-gradient-to-br from-blue-500 via-purple-500 to-rose-500' },
+                { id: 'mesh', name: 'Mesh Aurora', style: 'bg-gradient-to-tr from-emerald-400 via-cyan-500 to-blue-500' },
+                { id: 'glass', name: 'Dark Glass', style: 'bg-slate-900' }
+              ].map(bg => (
+                <button
+                  key={bg.id}
+                  onClick={() => onUpdateSettings({ newTabBackground: bg.id as any })}
+                  className={`flex-1 min-w-[100px] p-2 rounded-xl border flex flex-col items-center gap-2 transition-all overflow-hidden ${
+                    settings.newTabBackground === bg.id || (!settings.newTabBackground && bg.id === 'default')
+                      ? 'border-blue-500 ring-2 ring-blue-500/20 shadow-md'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div className={`w-full h-12 rounded-lg shadow-inner ${bg.style}`} />
+                  <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{bg.name}</span>
                 </button>
               ))}
             </div>
