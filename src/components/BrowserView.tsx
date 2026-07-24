@@ -236,6 +236,7 @@ export const BrowserView: React.FC<BrowserViewProps> = React.memo(({
     );
   }
 
+  return (
     <div className="w-full h-full relative bg-white dark:bg-slate-900 flex flex-col">
       {/* Top Progress Bar */}
       <AnimatePresence>
