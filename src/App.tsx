@@ -360,9 +360,15 @@ function App() {
       try {
         const result = webview.getZoomLevel();
         if (typeof result === 'number') {
-          webview.setZoomLevel(result + 0.5);
+          const newLevel = result + 0.5;
+          webview.setZoomLevel(newLevel);
+          setTabs(prev => prev.map(t => t.id === activeTabId ? { ...t, zoomLevel: newLevel } : t));
         } else if (result && typeof result.then === 'function') {
-          result.then((level: number) => webview.setZoomLevel(level + 0.5));
+          result.then((level: number) => {
+            const newLevel = level + 0.5;
+            webview.setZoomLevel(newLevel);
+            setTabs(prev => prev.map(t => t.id === activeTabId ? { ...t, zoomLevel: newLevel } : t));
+          });
         }
       } catch (e) {
         console.error("Zoom in error:", e);
@@ -376,9 +382,15 @@ function App() {
       try {
         const result = webview.getZoomLevel();
         if (typeof result === 'number') {
-          webview.setZoomLevel(result - 0.5);
+          const newLevel = result - 0.5;
+          webview.setZoomLevel(newLevel);
+          setTabs(prev => prev.map(t => t.id === activeTabId ? { ...t, zoomLevel: newLevel } : t));
         } else if (result && typeof result.then === 'function') {
-          result.then((level: number) => webview.setZoomLevel(level - 0.5));
+          result.then((level: number) => {
+            const newLevel = level - 0.5;
+            webview.setZoomLevel(newLevel);
+            setTabs(prev => prev.map(t => t.id === activeTabId ? { ...t, zoomLevel: newLevel } : t));
+          });
         }
       } catch (e) {
         console.error("Zoom out error:", e);

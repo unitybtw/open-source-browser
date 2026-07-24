@@ -11,6 +11,7 @@ export interface Tab {
   isIncognito?: boolean;
   thumbnail?: string;
   workspaceId?: string;
+  zoomLevel?: number;
 }
 
 export interface Workspace {
