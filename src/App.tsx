@@ -639,16 +639,17 @@ function App() {
           const videos = Array.from(document.querySelectorAll('video'));
           const target = videos.find(v => !v.paused) || videos[0];
           if (!target) {
-            alert("No video found on page!");
-            return;
+            throw new Error("No video found on page!");
           }
           if (document.pictureInPictureElement) {
-            document.exitPictureInPicture().catch(e => alert("Exit PiP error: " + e));
+            return document.exitPictureInPicture();
           } else {
-            target.requestPictureInPicture().catch(e => alert("PiP error: " + e.message));
+            return target.requestPictureInPicture();
           }
         })();
-      `, true);
+      `, true).catch((e: any) => {
+        alert("Picture-in-Picture Error: " + (e.message || e));
+      });
     }
   }, []);
 
