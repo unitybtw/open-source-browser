@@ -200,7 +200,7 @@ export const SidebarTabs: React.FC<SidebarTabsProps> = ({
                                       else video.requestPictureInPicture().catch(console.error);
                                     }
                                   })();
-                                `);
+                                `, true);
                               }
                             }
                           }}
