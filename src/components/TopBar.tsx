@@ -246,6 +246,20 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
                 }`}
               >
                 <div className="flex items-center gap-2 overflow-hidden">
+                  {/* Thumbnail Hover Preview */}
+                  {!isActive && tab.thumbnail && (
+                    <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200/80 dark:border-slate-700/80 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-[100] overflow-hidden translate-y-2 group-hover:translate-y-0 scale-95 group-hover:scale-100 origin-top">
+                      <div className="w-full aspect-video bg-slate-100 dark:bg-slate-900 overflow-hidden relative">
+                        <img src={tab.thumbnail} className="w-full h-full object-cover object-top" alt="Preview" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                      </div>
+                      <div className="p-2.5 text-xs font-semibold text-slate-800 dark:text-slate-100 truncate flex items-center gap-2">
+                        {tab.favicon && <img src={tab.favicon} className="w-3.5 h-3.5 rounded-sm" />}
+                        <span className="truncate">{tab.title || 'New Tab'}</span>
+                      </div>
+                    </div>
+                  )}
+
                   {tab.isLoading ? (
                     <div className="w-3.5 h-3.5 border-2 border-blue-500/50 border-t-transparent rounded-full animate-spin shrink-0" />
                   ) : tab.favicon ? (

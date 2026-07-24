@@ -89,14 +89,24 @@ export const BrowserView: React.FC<BrowserViewProps> = React.memo(({
       }
     };
 
-    const handleStopLoading = () => {
+    const handleStopLoading = async () => {
       console.log('[BrowserView] did-stop-loading');
+      
+      let thumbnailDataUrl;
+      try {
+        if (webviewRef.current && (window as any).electronAPI?.captureTabThumbnail) {
+          const wcId = webviewRef.current.getWebContentsId();
+          thumbnailDataUrl = await (window as any).electronAPI.captureTabThumbnail(wcId);
+        }
+      } catch (err) {}
+
       // Fallback for when all frames finish loading
       onUpdateTab(tab.id, {
         isLoading: false,
         canGoBack: webview.canGoBack?.() || false,
         canGoForward: webview.canGoForward?.() || false,
-        title: webview.getTitle?.() || tab.url
+        title: webview.getTitle?.() || tab.url,
+        ...(thumbnailDataUrl ? { thumbnail: thumbnailDataUrl } : {})
       });
     };
 
@@ -261,6 +271,22 @@ export const BrowserView: React.FC<BrowserViewProps> = React.memo(({
 
     return () => { try { unsubscribe?.(); } catch (_) {} };
   }, [isNewTab, tab.id, onUpdateTab]);
+
+  // Capture thumbnail when switching away from this tab
+  useEffect(() => {
+    if (!isActive && webviewRef.current && !isNewTab && (window as any).electronAPI?.captureTabThumbnail) {
+      const capture = async () => {
+        try {
+          const wcId = webviewRef.current.getWebContentsId();
+          const thumbnailDataUrl = await (window as any).electronAPI.captureTabThumbnail(wcId);
+          if (thumbnailDataUrl) {
+            onUpdateTab(tab.id, { thumbnail: thumbnailDataUrl });
+          }
+        } catch (err) {}
+      };
+      capture();
+    }
+  }, [isActive, isNewTab, tab.id, onUpdateTab]);
 
   if (isNewTab) {
     return (
