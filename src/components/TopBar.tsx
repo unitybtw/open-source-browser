@@ -125,9 +125,28 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
   const [hoverPos, setHoverPos] = useState({ left: 0, width: 0 });
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [extensions, setExtensions] = useState<any[]>([]);
   
   const activeTab = React.useMemo(() => tabs.find(t => t.id === activeTabId), [tabs, activeTabId]);
   const isBookmarked = React.useMemo(() => bookmarks.some(b => b.url === activeTab?.url), [bookmarks, activeTab?.url]);
+
+  useEffect(() => {
+    const fetchExtensions = async () => {
+      try {
+        if ((window as any).electronAPI?.listExtensions) {
+          const list = await (window as any).electronAPI.listExtensions();
+          setExtensions(list || []);
+        }
+      } catch (err) {}
+    };
+    
+    fetchExtensions();
+    
+    const handleExtUpdated = () => fetchExtensions();
+    window.addEventListener('extensions-updated', handleExtUpdated);
+    
+    return () => window.removeEventListener('extensions-updated', handleExtUpdated);
+  }, []);
 
   useEffect(() => {
     if (!searchValue || searchValue.includes('://') || searchValue.includes('.') || activeTab?.url === searchValue) {
@@ -589,6 +608,20 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
           >
             <Shield className="w-4 h-4" />
           </button>
+          {/* Active Extensions */}
+          {extensions.map(ext => (
+            <button
+              key={ext.id}
+              className={`p-1.5 rounded transition-colors flex items-center justify-center font-bold text-[11px] w-[28px] h-[28px] shrink-0 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 ${isIncognito ? 'hover:bg-slate-700' : 'hover:bg-indigo-100 dark:hover:bg-indigo-800/50'}`}
+              title={ext.name}
+              onClick={() => {
+                // Future: Trigger extension popup
+              }}
+            >
+              {ext.name.charAt(0).toUpperCase()}
+            </button>
+          ))}
+
           <button 
             onClick={onOpenExtensions}
             className={`p-1.5 rounded transition-colors ${isIncognito ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-100 text-slate-600 dark:text-slate-300 dark:hover:bg-slate-700'}`}

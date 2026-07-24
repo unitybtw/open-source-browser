@@ -31,6 +31,7 @@ export const ExtensionsModal: React.FC<ExtensionsModalProps> = React.memo(({ isO
       const list = await (window as any).electronAPI?.listExtensions();
       if (list) {
         setExtensions(list);
+        window.dispatchEvent(new CustomEvent('extensions-updated'));
       }
     } catch (err: any) {
       setError(err.message || 'Failed to load extensions');
